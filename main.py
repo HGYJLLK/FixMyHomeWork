@@ -200,10 +200,19 @@ def rename_word_files(excel_path, word_folder, name_format, name_range, id_range
                     continue
 
                 # 生成新文件名
-                if matched_student['id']:
-                    new_filename = f"{matched_student['id']} {matched_student['name']} 实验（训）报告【电子版】-{name_format}{word_file.suffix}"
+                # 如果用户输入的 name_format 中已经包含了"实验（训）报告【电子版】-"，就不再添加
+                if "实验（训）报告【电子版】-" in name_format or name_format.startswith("实验"):
+                    # 用户自己已经编写了完整的后缀
+                    if matched_student['id']:
+                        new_filename = f"{matched_student['id']} {matched_student['name']} {name_format}{word_file.suffix}"
+                    else:
+                        new_filename = f"{matched_student['name']} {name_format}{word_file.suffix}"
                 else:
-                    new_filename = f"{matched_student['name']} 实验（训）报告【电子版】-{name_format}{word_file.suffix}"
+                    # 用户只输入了简单的后缀（如"简历"），直接使用
+                    if matched_student['id']:
+                        new_filename = f"{matched_student['id']} {matched_student['name']} {name_format}{word_file.suffix}"
+                    else:
+                        new_filename = f"{matched_student['name']} {name_format}{word_file.suffix}"
 
                 new_filename = clean_filename(new_filename)
                 new_path = word_folder / new_filename
@@ -212,9 +221,9 @@ def rename_word_files(excel_path, word_folder, name_format, name_range, id_range
                 if new_path.exists() and not new_path.samefile(word_file):
                     counter = 1
                     while new_path.exists():
-                        name_without_ext = f"{matched_student['id']} {matched_student['name']} 实验（训）报告【电子版】-{name_format}({counter})" if \
+                        name_without_ext = f"{matched_student['id']} {matched_student['name']} {name_format}({counter})" if \
                         matched_student[
-                            'id'] else f"{matched_student['name']} 实验（训）报告【电子版】-{name_format}({counter})"
+                            'id'] else f"{matched_student['name']} {name_format}({counter})"
                         new_filename = clean_filename(name_without_ext) + word_file.suffix
                         new_path = word_folder / new_filename
                         counter += 1
@@ -329,7 +338,8 @@ HTML_TEMPLATE = '''
         <form id="renameForm">
             <div class="form-group">
                 <label>文件名后缀:</label>
-                <input type="text" id="nameFormat" placeholder="例如：实验九" required>
+                <input type="text" id="nameFormat" placeholder="例如：简历 或 实验（训）报告【电子版】-实验九" required>
+                <div class="help">输入文件后缀，如"简历"或完整的"实验（训）报告【电子版】-实验九"</div>
             </div>
 
             <div class="form-group">
