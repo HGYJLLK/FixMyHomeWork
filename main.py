@@ -159,23 +159,31 @@ def clean_filename(filename):
 
 
 def rename_word_files(excel_path, word_folder, name_format, name_range, id_range, match_strategies):
-    """重命名Word文档"""
+    """重命名Word文档、PDF文件和图片文件"""
     try:
         # 加载Excel数据
         student_data = load_excel_data(excel_path, name_range, id_range)
         logger.info(f"加载学生数据: {len(student_data)} 条记录")
 
-        # 获取Word文件
+        # 获取文件夹
         word_folder = Path(word_folder)
         if not word_folder.exists():
-            return {"success": False, "message": f"Word文件夹不存在: {word_folder}"}
+            return {"success": False, "message": f"文件夹不存在: {word_folder}"}
 
+        # 获取Word文件、PDF文件和图片文件
         word_files = []
+        # Word文档
         for ext in ['*.docx', '*.doc']:
+            word_files.extend(word_folder.glob(ext))
+        # PDF文件
+        for ext in ['*.pdf', '*.PDF']:
+            word_files.extend(word_folder.glob(ext))
+        # 图片文件
+        for ext in ['*.jpg', '*.jpeg', '*.png', '*.gif', '*.bmp', '*.webp', '*.JPG', '*.JPEG', '*.PNG', '*.GIF', '*.BMP', '*.WEBP']:
             word_files.extend(word_folder.glob(ext))
 
         if not word_files:
-            return {"success": False, "message": "未找到Word文档"}
+            return {"success": False, "message": "未找到Word文档、PDF文件或图片文件"}
 
         results = []
         success_count = 0
@@ -290,7 +298,7 @@ def rename_files():
             return jsonify({"success": False, "message": f"Excel文件不存在: {excel_path}"})
 
         if not os.path.exists(word_folder):
-            return jsonify({"success": False, "message": f"Word文件夹不存在: {word_folder}"})
+            return jsonify({"success": False, "message": f"文件夹不存在: {word_folder}"})
 
         result = rename_word_files(excel_path, word_folder, name_format, name_range, id_range, match_strategies)
         return jsonify(result)
@@ -333,7 +341,7 @@ HTML_TEMPLATE = '''
 </head>
 <body>
     <div class="container">
-        <h1>批量文档重命名工具</h1>
+        <h1>批量文件重命名工具</h1>
 
         <form id="renameForm">
             <div class="form-group">
@@ -348,8 +356,9 @@ HTML_TEMPLATE = '''
             </div>
 
             <div class="form-group">
-                <label>Word文件夹路径:</label>
+                <label>文件夹路径:</label>
                 <input type="text" id="wordFolder" placeholder="C:\\path\\to\\folder" required>
+                <div class="help">支持Word文档(.doc/.docx)、PDF文件(.pdf)和图片(.jpg/.png/.gif等)</div>
             </div>
 
             <div class="form-group">
